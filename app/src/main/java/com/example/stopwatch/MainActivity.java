@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     Button startStopBtn;
@@ -26,11 +27,20 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        findViewById(R.id.reset_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reset();
+            }
+        });
     }
+
 
     private void start() {
         startStopBtn.setText(R.string.stop);
         startStopBtn.setTextColor(Color.parseColor("#EF0808"));
+
     }
 
     private void stop() {
@@ -42,5 +52,18 @@ public class MainActivity extends AppCompatActivity {
         String statusText = startStopBtn.getText().toString();
         return statusText.equalsIgnoreCase("start");
 
+    }
+
+    private void reset() {
+        TextView hoursTv, minuteTv, secondsTv, milliSecondsTv;
+        hoursTv = findViewById(R.id.hours_tv);
+        minuteTv = findViewById(R.id.minutes_tv);
+        secondsTv = findViewById(R.id.seconds_tv);
+        milliSecondsTv = findViewById(R.id.mili_seconds_tv);
+
+        hoursTv.setText(R.string.zero);
+        minuteTv.setText(R.string.zero);
+        secondsTv.setText(R.string.zero);
+        milliSecondsTv.setText(R.string.zero);
     }
 }
