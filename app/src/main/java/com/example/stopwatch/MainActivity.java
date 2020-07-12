@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void startStopBtnClicked(View v) {
         if (stat()){
-            if(!running){
+
                 watch.setBase(SystemClock.elapsedRealtime());
                 watch.start();
                 pauseBtn.setVisibility(View.VISIBLE);
@@ -69,16 +69,15 @@ public class MainActivity extends AppCompatActivity {
                 tStart = SystemClock.uptimeMillis();
                 handler.postDelayed(startRun,0);
 
-            }
-
-
         }
         else {
+            watch.stop();
+            running = false;
             startStopBtn.setText(R.string.start);
             pauseBtn.setText(R.string.pause);
             pauseBtn.setVisibility(View.GONE);
             startStopBtn.setTextColor(Color.parseColor("#05E10E"));
-            running = false;
+
         }
 
 
@@ -101,10 +100,21 @@ public class MainActivity extends AppCompatActivity {
     }
     public void resetBtnClicked(View v) {
         watch.stop();
-        String stopText = "00:00:00:00";
-        watch.setText(stopText);
+        running=false;
+        if (!stat()) {
+            handler.removeCallbacks(startRun);
+            String stopText = "00:00:00:00";
+            watch.setText(stopText);
+            tStart= SystemClock.uptimeMillis();
+            running = true;
+            handler.postDelayed(startRun,0);
+        } else {
+            handler.removeCallbacks(startRun);
+            running = false;
+            String stopText = "00:00:00:00";
+            watch.setText(stopText);
+        }
     }
-
     private boolean stat() {
         String statusText = startStopBtn.getText().toString();
         return statusText.equalsIgnoreCase("start");
