@@ -2,7 +2,9 @@
     <string name="app_name">StopWatch</string>
     <string name="zero">0</string>
     <string name="start">Start</string>
+    <string name="pause">Pause</string>
     <string name="stop">Stop</string>
     <string name="reset">RESET</string>
     <string name="format">%02d</string>
+    <string name="resume">Resume</string>
 </resources>

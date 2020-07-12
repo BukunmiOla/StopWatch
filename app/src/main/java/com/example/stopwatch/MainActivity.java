@@ -9,16 +9,15 @@ import android.os.SystemClock;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button startStopBtn;
+    Button startStopBtn, pauseBtn;
     Chronometer watch;
     Handler handler;
-    Long tMilliSec, tBuff, tUpdate,tStart =0L;
+    Long tMilliSec, tBuff, tUpdate,tStart, pauseOffSet =0L;
     int hour, min, sec, milliSec;
-    Boolean running;
+    Boolean running, isPaused, isResumed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,37 +25,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         watch = findViewById(R.id.watch_chrm);
-        handler = new Handler();
         startStopBtn = findViewById(R.id.start_stop_btn);
+        pauseBtn = findViewById(R.id.pause_btn);
+        running = false;
 
-        startStopBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (stat()){
-                    start();
-                }else{
-                    stop();
-                }
-            }
-        });
-
-        findViewById(R.id.reset_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                reset();
-            }
-        });
+        handler = new Handler();
     }
+
 
     public Runnable startRun = new Runnable() {
         @Override
         public void run() {
-            if (!running) {
-                tMilliSec = tBuff = tUpdate = tStart =0L;
-                hour = min = sec = milliSec = 0;
-                String stopText = "00:00:00:00";
-                watch.setText(stopText);
-            } else {
+            if (running ) {
                 tMilliSec = SystemClock.uptimeMillis() - tStart;
                 tUpdate = tBuff = tMilliSec;
                 sec = (int) (tUpdate / 1000);
@@ -69,29 +49,60 @@ public class MainActivity extends AppCompatActivity {
                         String.format("%02d", sec) + ":" + String.format("%02d", milliSec);
                 watch.setText(display);
                 handler.postDelayed(this, 60);
+                }
             }
+        };
+
+
+
+    public void startStopBtnClicked(View v) {
+        if (stat()){
+            if(!running){
+                watch.setBase(SystemClock.elapsedRealtime());
+                watch.start();
+                pauseBtn.setVisibility(View.VISIBLE);
+                startStopBtn.setText(R.string.stop);
+                startStopBtn.setTextColor(Color.parseColor("#EF0808"));
+                running =true;
+                isPaused = false;
+                isResumed = false;
+                tStart = SystemClock.uptimeMillis();
+                handler.postDelayed(startRun,0);
+
+            }
+
+
         }
-    };
+        else {
+            startStopBtn.setText(R.string.start);
+            pauseBtn.setText(R.string.pause);
+            pauseBtn.setVisibility(View.GONE);
+            startStopBtn.setTextColor(Color.parseColor("#05E10E"));
+            running = false;
+        }
 
-    private void start() {
-        startStopBtn.setText(R.string.stop);
-        startStopBtn.setTextColor(Color.parseColor("#EF0808"));
-        startRunning();
 
     }
 
-    private void startRunning() {
-        tStart = SystemClock.uptimeMillis();
-        running =true;
-        handler.postDelayed(startRun,0);
-        watch.start();
-    }
+    public void pauseBtnClicked(View v) {
+            if (pauseStat()){
+                pauseBtn.setText(R.string.resume);
+                watch.stop();
+                pauseOffSet = SystemClock.uptimeMillis() - tStart;
+                running = false;
+                handler.removeCallbacks(startRun);
+            }else{
+                pauseBtn.setText(R.string.pause);
+                tStart = (SystemClock.uptimeMillis()-pauseOffSet);
+                running = true;
+                handler.postDelayed(startRun,0);
+            }
 
-    private void stop() {
-        startStopBtn.setText(R.string.start);
-        startStopBtn.setTextColor(Color.parseColor("#05E10E"));
-        running = false;
-        handler.removeCallbacks(startRun);
+    }
+    public void resetBtnClicked(View v) {
+        watch.stop();
+        String stopText = "00:00:00:00";
+        watch.setText(stopText);
     }
 
     private boolean stat() {
@@ -99,21 +110,9 @@ public class MainActivity extends AppCompatActivity {
         return statusText.equalsIgnoreCase("start");
 
     }
+    private boolean pauseStat() {
+        String statusText = pauseBtn.getText().toString();
+        return statusText.equalsIgnoreCase("pause");
 
-    private void reset() {
-        TextView hoursTv, minuteTv, secondsTv, milliSecondsTv;
-        hoursTv = findViewById(R.id.hours_tv);
-        minuteTv = findViewById(R.id.minutes_tv);
-        secondsTv = findViewById(R.id.seconds_tv);
-        milliSecondsTv = findViewById(R.id.mili_seconds_tv);
-
-        hoursTv.setText(R.string.zero);
-        minuteTv.setText(R.string.zero);
-        secondsTv.setText(R.string.zero);
-        milliSecondsTv.setText(R.string.zero);
-
-        watch.stop();
-        String stopText = "00:00:00:00";
-        watch.setText(stopText);
     }
 }
