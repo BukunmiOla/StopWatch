@@ -1,10 +1,12 @@
 package com.example.stopwatch;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.Button;
@@ -27,11 +29,41 @@ public class MainActivity extends AppCompatActivity {
         watch = findViewById(R.id.watch_chrm);
         startStopBtn = findViewById(R.id.start_stop_btn);
         pauseBtn = findViewById(R.id.pause_btn);
-        running = false;
-
         handler = new Handler();
+
+        if (savedInstanceState != null){
+            running = savedInstanceState.getBoolean("running");
+            watch.setText(savedInstanceState.getString("display"));
+            startStopBtn.setText(savedInstanceState.getString("startStop"));
+            pauseBtn.setText(savedInstanceState.getString("pauseResume"));
+            isPaused = savedInstanceState.getBoolean("pauseStatus");
+            if (!isPaused){
+                pauseBtn.setVisibility(View.VISIBLE);
+                startStopBtn.setTextColor(Color.parseColor("#EF0808"));
+            }
+            pauseOffSet = savedInstanceState.getLong("pauseOffSetCurrent");
+            tStart = (SystemClock.uptimeMillis()-pauseOffSet);
+        }else  running = false;
+
+
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (running)  pause();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("startStop",startStopBtn.getText().toString());
+        outState.putString("pauseResume",pauseBtn.getText().toString());
+        outState.putBoolean("pauseStatus",pauseStat());
+        outState.putBoolean("running",running);
+        outState.putLong("pauseOffSetCurrent",pauseOffSet);
+        outState.putString("display",watch.getText().toString());
+    }
 
     public Runnable startRun = new Runnable() {
         @Override
@@ -64,8 +96,6 @@ public class MainActivity extends AppCompatActivity {
                 startStopBtn.setText(R.string.stop);
                 startStopBtn.setTextColor(Color.parseColor("#EF0808"));
                 running =true;
-                isPaused = false;
-                isResumed = false;
                 tStart = SystemClock.uptimeMillis();
                 handler.postDelayed(startRun,0);
 
@@ -85,11 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void pauseBtnClicked(View v) {
             if (pauseStat()){
-                pauseBtn.setText(R.string.resume);
-                watch.stop();
-                pauseOffSet = SystemClock.uptimeMillis() - tStart;
-                running = false;
-                handler.removeCallbacks(startRun);
+                pause();
             }else{
                 pauseBtn.setText(R.string.pause);
                 tStart = (SystemClock.uptimeMillis()-pauseOffSet);
@@ -98,6 +124,15 @@ public class MainActivity extends AppCompatActivity {
             }
 
     }
+
+    private void pause() {
+        pauseBtn.setText(R.string.resume);
+        watch.stop();
+        pauseOffSet = SystemClock.uptimeMillis() - tStart;
+        running = false;
+        handler.removeCallbacks(startRun);
+    }
+
     public void resetBtnClicked(View v) {
         watch.stop();
         running=false;
@@ -115,11 +150,13 @@ public class MainActivity extends AppCompatActivity {
             watch.setText(stopText);
         }
     }
+
     private boolean stat() {
         String statusText = startStopBtn.getText().toString();
         return statusText.equalsIgnoreCase("start");
 
     }
+
     private boolean pauseStat() {
         String statusText = pauseBtn.getText().toString();
         return statusText.equalsIgnoreCase("pause");
